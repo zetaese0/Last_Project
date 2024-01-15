@@ -6,10 +6,11 @@ from flask import Flask, request, jsonify, url_for, send_from_directory
 from flask_migrate import Migrate
 from flask_swagger import swagger
 from api.utils import APIException, generate_sitemap
-from api.models import db
+from api.models import db, User, Ofertas
 from api.routes import api
 from api.admin import setup_admin
 from api.commands import setup_commands
+from flask_cors import CORS
 
 # from models import Person
 
@@ -17,6 +18,7 @@ ENV = "development" if os.getenv("FLASK_DEBUG") == "1" else "production"
 static_file_dir = os.path.join(os.path.dirname(
     os.path.realpath(__file__)), '../public/')
 app = Flask(__name__)
+CORS(app) 
 app.url_map.strict_slashes = False
 
 # database condiguration
@@ -57,6 +59,121 @@ def sitemap():
     return send_from_directory(static_file_dir, 'index.html')
 
 # any other endpoint will try to serve it like a static file
+
+# Get all users
+@app.route('/users', methods=['GET'])
+def get_users():
+    all_users = User.query.all()
+    results = list(map(lambda user: user.serialize(), all_users))
+    response_body = {
+        "msg": "GET /users response",
+        "data": results
+    }
+    return jsonify(response_body), 200
+
+
+@app.route('/ofertas', methods=['GET'])
+def get_ofertas():
+    all_ofertas= Ofertas.query.all()
+    results = list(map(lambda oferta: oferta.serialize(), all_ofertas))
+    response_body = {
+        "msg": "GET /ofertas response",
+        "data": results
+    }
+    return jsonify(response_body), 200
+
+@app.route('/ofertas/<int:oferta_id>', methods=['GET'])
+def get_oferta(oferta_id):
+    # Retrieve the oferta from the database by its ID
+    oferta = Ofertas.query.get(oferta_id)
+
+    # Check if the oferta with the given ID exists
+    if not oferta:
+        return jsonify({"error": "Oferta not found"}), 404
+
+    # Return the serialized oferta in the response
+    response_body = {
+        "msg": f"GET /ofertas/{oferta_id} response",
+        "data": oferta.serialize()
+    }
+    return jsonify(response_body), 200
+
+
+
+@app.route('/ofertas', methods=['POST'])
+def add_new_oferta():
+    request_body = request.json
+
+    new_oferta = Ofertas(
+        TipoProyecto=request_body['TipoProyecto'],
+        TipoEquipo=request_body['TipoEquipo'],
+        Pais=request_body['Pais'],
+        FechaOferta=request_body['FechaOferta'],
+        Precio=request_body['Precio']
+    )
+
+    db.session.add(new_oferta)
+    db.session.commit()
+
+    response_body = {"msg": "Oferta added successfully", "data": new_oferta.serialize()}
+    return jsonify(response_body), 201  # 201 Created status code
+
+
+@app.route('/ofertas/<int:oferta_id>', methods=['PUT'])
+def update_oferta(oferta_id):
+    # Retrieve the existing oferta from the database
+    oferta = Ofertas.query.get(oferta_id)
+    print("PRUEBA")
+
+    # Check if the oferta with the given ID exists
+    if not oferta:
+        return jsonify({"error": "Oferta not found"}), 404
+
+    # Get the updated data from the request JSON
+    updated_data = request.json
+
+    # Update the oferta fields with the new data
+    oferta.TipoProyecto = updated_data.get('TipoProyecto', oferta.TipoProyecto)
+    oferta.TipoEquipo = updated_data.get('TipoEquipo', oferta.TipoEquipo)
+    oferta.Pais = updated_data.get('Pais', oferta.Pais)
+    oferta.FechaOferta = updated_data.get('FechaOferta', oferta.FechaOferta)
+    oferta.Precio = updated_data.get('Precio', oferta.Precio)
+
+    # Commit the changes to the database
+    db.session.commit()
+
+    # Return the updated oferta in the response
+    response_body = {
+        "msg": f"Oferta with ID {oferta_id} updated successfully",
+        "data": oferta.serialize()
+    }
+    return jsonify(response_body), 200
+
+
+
+@app.route('/ofertas/<int:oferta_id>', methods=['DELETE'])
+def delete_oferta(oferta_id):
+    # Retrieve the oferta from the database by its ID
+    oferta = Ofertas.query.get(oferta_id)
+
+    # Check if the oferta with the given ID exists
+    if not oferta:
+        return jsonify({"error": "Oferta not found"}), 404
+
+    # Delete the oferta from the database
+    db.session.delete(oferta)
+    db.session.commit()
+
+    # Return a success message in the response
+    response_body = {
+        "msg": f"DELETE /ofertas/{oferta_id} response",
+        "data": {"status": "success", "message": f"Oferta with ID {oferta_id} deleted successfully"}
+    }
+    return jsonify(response_body), 200
+
+
+
+
 
 
 @app.route('/<path:path>', methods=['GET'])

@@ -104,6 +104,12 @@ def get_oferta(oferta_id):
 def add_new_oferta():
     request_body = request.json
 
+    # Check if 'FechaOferta' is present in the request JSON
+    if 'FechaOferta' not in request_body or request_body['FechaOferta'] == "":
+        # If not provided, set it to None (null)
+        request_body['FechaOferta'] = None
+
+
     new_oferta = Ofertas(
         TipoProyecto=request_body['TipoProyecto'],
         TipoEquipo=request_body['TipoEquipo'],

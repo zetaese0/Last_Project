@@ -23,7 +23,7 @@ class Ofertas(db.Model):
     TipoProyecto = db.Column(db.String(250), nullable=False)
     TipoEquipo = db.Column(db.String(250), nullable=False)
     Pais = db.Column(db.String(250), nullable=False)
-    FechaOferta = db.Column(db.DateTime, nullable=False)
+    FechaOferta = db.Column(db.DateTime, nullable=True)
     Precio=db.Column(db.Integer, nullable=False)
 
     

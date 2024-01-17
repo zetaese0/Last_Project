@@ -1,9 +1,14 @@
-// EditModal.js
-import React from "react";
+// modal.js
+import React, { useEffect } from "react";
 import { Modal, Button, Form } from "react-bootstrap";
 
-const EditModal = ({ show, onHide, oferta, onEdit }) => {
-  const [editedOferta, setEditedOferta] = React.useState(oferta);
+const ModalComponent = ({ show, onHide, oferta, onEdit }) => {
+  const [editedOferta, setEditedOferta] = React.useState({});
+
+  // Update the editedOferta state when the oferta prop changes
+  useEffect(() => {
+    setEditedOferta(oferta || {});
+  }, [oferta]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -12,9 +17,11 @@ const EditModal = ({ show, onHide, oferta, onEdit }) => {
 
   const handleUpdateClick = () => {
     // Call the onEdit callback with the edited oferta
+    console.log("Pulsando desde el modal y su valor", editedOferta);
     onEdit(editedOferta);
     // Close the modal
     onHide();
+
   };
 
   return (
@@ -24,17 +31,55 @@ const EditModal = ({ show, onHide, oferta, onEdit }) => {
       </Modal.Header>
       <Modal.Body>
         <Form>
-          {/* Render editable fields here */}
           <Form.Group controlId="formTipoProyecto">
             <Form.Label>Tipo Proyecto</Form.Label>
             <Form.Control
               type="text"
               name="TipoProyecto"
-              value={editedOferta.TipoProyecto}
+              value={editedOferta.TipoProyecto || ""}
               onChange={handleInputChange}
             />
           </Form.Group>
-          {/* Add similar Form.Group elements for other fields */}
+
+          <Form.Group controlId="formTipoEquipo">
+            <Form.Label>Tipo Equipo</Form.Label>
+            <Form.Control
+              type="text"
+              name="TipoEquipo"
+              value={editedOferta.TipoEquipo || ""}
+              onChange={handleInputChange}
+            />
+          </Form.Group>
+
+          <Form.Group controlId="formPais">
+            <Form.Label>Pais</Form.Label>
+            <Form.Control
+              type="text"
+              name="Pais"
+              value={editedOferta.Pais || ""}
+              onChange={handleInputChange}
+            />
+          </Form.Group>
+
+          <Form.Group controlId="formFechaOferta">
+            <Form.Label>Fecha Oferta</Form.Label>
+            <Form.Control
+              type="text"
+              name="FechaOferta"
+              value={editedOferta.FechaOferta || ""}
+              onChange={handleInputChange}
+            />
+          </Form.Group>
+
+          <Form.Group controlId="formPrecio">
+            <Form.Label>Precio</Form.Label>
+            <Form.Control
+              type="text"
+              name="Precio"
+              value={editedOferta.Precio || ""}
+              onChange={handleInputChange}
+            />
+          </Form.Group>
         </Form>
       </Modal.Body>
       <Modal.Footer>
@@ -49,4 +94,4 @@ const EditModal = ({ show, onHide, oferta, onEdit }) => {
   );
 };
 
-export default EditModal;
+export default ModalComponent;

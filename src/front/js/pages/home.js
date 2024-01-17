@@ -1,10 +1,19 @@
 import React, { useContext, useEffect, useState } from "react";
 import { Context } from "../store/appContext";
+import EditModal from "../component/modal";
+import { Link } from "react-router-dom";
 
 export const Home = () => {
     const { store, actions } = useContext(Context);
     const [selectedOferta, setSelectedOferta] = useState(null);
     const [editedOferta, setEditedOferta] = useState(null);
+    const [newOferta, setNewOferta] = useState({
+        TipoProyecto: "",
+        TipoEquipo: "",
+        Pais: "",
+        FechaOferta: "",
+        Precio: ""
+    });
 
     useEffect(() => {
         // Fetch ofertas when the component mounts
@@ -12,16 +21,17 @@ export const Home = () => {
     }, []);
 
     const handleEditClick = (oferta) => {
-        console.log("Editing oferta:", oferta);
+        console.log("Editing oferta PULSANDO EN FRONT ANTES MODAL:", oferta);
         // Set the selectedOferta and create a copy for editing
         setSelectedOferta(oferta);
         setEditedOferta({ ...oferta });
     };
+    const handleUpdateClick = (updatedOferta) => {
+        console.log("Updated oferta received in home.js:", updatedOferta);
+        // Your logic to update the state or perform further actions
+        // For example, you can call the updateOferta action here:
+        actions.updateOferta(updatedOferta);
 
-    const handleUpdateClick = () => {
-        // Call the update action with the edited oferta
-        console.log("Updating oferta:", editedOferta);
-        actions.updateOferta(editedOferta);
         // Clear the selectedOferta and editedOferta states
         setSelectedOferta(null);
         setEditedOferta(null);
@@ -35,12 +45,40 @@ export const Home = () => {
         });
     };
 
+    const handleNewOfertaInputChange = (e) => {
+        // Update the corresponding property in the newOferta state
+        setNewOferta({
+            ...newOferta,
+            [e.target.name]: e.target.value
+        });
+    };
+
+    const handleAddNewOferta = () => {
+        // Call the add new oferta action with the newOferta
+        console.log("Adding new oferta:", newOferta);
+        actions.addNewOferta(newOferta);
+        // Clear the newOferta state
+        setNewOferta({
+            TipoProyecto: "",
+            TipoEquipo: "",
+            Pais: "",
+            FechaOferta: "",
+            Precio: ""
+        });
+    };
+
+    const handleDeleteClick = (ofertaId) => {
+        // Call the delete action with the oferta ID
+        actions.deleteOferta(ofertaId);
+    };
+
     return (
         <div className="text-center mt-5">
             <h1>Ofertas Table</h1>
             <table className="table">
                 <thead>
                     <tr>
+                        <th>Link</th>
                         <th>ID</th>
                         <th>Tipo Proyecto</th>
                         <th>Tipo Equipo</th>
@@ -53,6 +91,9 @@ export const Home = () => {
                 <tbody>
                     {store.ofertas.map((oferta) => (
                         <tr key={oferta.id}>
+                            <td>
+                                <Link to={`/oferta/${oferta.id}`}>View Details</Link>
+                            </td>
                             <td>{oferta.id}</td>
                             <td>{oferta.TipoProyecto}</td>
                             <td>{oferta.TipoEquipo}</td>
@@ -66,32 +107,79 @@ export const Home = () => {
                                 >
                                     Edit
                                 </button>
+                                &nbsp;|&nbsp;
+                                <button
+                                    className="btn btn-danger"
+                                    onClick={() => handleDeleteClick(oferta.id)}
+                                >
+                                    Delete
+                                </button>
                             </td>
                         </tr>
                     ))}
+                    {/* New Record Row */}
+                    <tr>
+                        <td></td>
+                        <td>New</td>
+                        <td>
+                            <input
+                                type="text"
+                                name="TipoProyecto"
+                                value={newOferta.TipoProyecto}
+                                onChange={handleNewOfertaInputChange}
+                            />
+                        </td>
+                        <td>
+                            <input
+                                type="text"
+                                name="TipoEquipo"
+                                value={newOferta.TipoEquipo}
+                                onChange={handleNewOfertaInputChange}
+                            />
+                        </td>
+                        <td>
+                            <input
+                                type="text"
+                                name="Pais"
+                                value={newOferta.Pais}
+                                onChange={handleNewOfertaInputChange}
+                            />
+                        </td>
+                        <td>
+                            <input
+                                type="text"
+                                name="FechaOferta"
+                                value={newOferta.FechaOferta}
+                                onChange={handleNewOfertaInputChange}
+                            />
+                        </td>
+                        <td>
+                            <input
+                                type="text"
+                                name="Precio"
+                                value={newOferta.Precio}
+                                onChange={handleNewOfertaInputChange}
+                            />
+                        </td>
+                        <td>
+                            <button
+                                className="btn btn-success"
+                                onClick={handleAddNewOferta}
+                            >
+                                Add
+                            </button>
+                        </td>
+                    </tr>
                 </tbody>
             </table>
 
-            {/* Render a modal or a form for editing */}
-            {selectedOferta && (
-                <div className="modal">
-                    {/* Add your editing form or modal here */}
-                    <h2>Edit Oferta</h2>
-                    <p>ID: {selectedOferta.id}</p>
-                    <label>
-                        Tipo Proyecto:
-                        <input
-                            type="text"
-                            name="TipoProyecto"
-                            value={editedOferta.TipoProyecto}
-                            onChange={handleInputChange}
-                        />
-                    </label>
-                    {/* Add input fields for other properties */}
-                    <button onClick={handleUpdateClick}>Update</button>
-                    <button onClick={() => setSelectedOferta(null)}>Close</button>
-                </div>
-            )}
+            {/* Render the EditModal */}
+            <EditModal
+                show={!!selectedOferta}
+                onHide={() => setSelectedOferta(null)}
+                oferta={selectedOferta}
+                onEdit={handleUpdateClick}
+            />
         </div>
     );
 };

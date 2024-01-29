@@ -9,10 +9,13 @@ const Ofertas = () => {
     const { store, actions } = useContext(Context);
     const [selectedOferta, setSelectedOferta] = useState(null);
     const [editedOferta, setEditedOferta] = useState(null);
+    const [selectedCountry, setSelectedCountry] = useState("");
+    const [selectedCity, setSelectedCity] = useState("");
     const [newOferta, setNewOferta] = useState({
         TipoProyecto: "",
         TipoEquipo: "",
         Pais: "",
+        Ciudad: "",
         FechaOferta: "",
         Precio: ""
     });
@@ -20,7 +23,15 @@ const Ofertas = () => {
     useEffect(() => {
         // Fetch ofertas when the component mounts
         actions.getOfertas();
+        actions.getCountries();
     }, []);
+
+    useEffect(() => {
+        // Fetch cities based on the selected country
+        if (selectedCountry) {
+            actions.getCities(selectedCountry);
+        }
+    }, [selectedCountry]);
 
     const handleEditClick = (oferta) => {
         console.log("Editing oferta PULSANDO EN FRONT ANTES MODAL:", oferta);
@@ -49,25 +60,38 @@ const Ofertas = () => {
     };
 
     const handleNewOfertaInputChange = (e) => {
-        // Update the corresponding property in the newOferta state
-        setNewOferta({
-            ...newOferta,
-            [e.target.name]: e.target.value
-        });
+        if (e.target.name === "Pais") {
+            setSelectedCountry(e.target.value);
+            setNewOferta({
+                ...newOferta,
+                [e.target.name]: e.target.value,
+                Ciudad: "", // Reset Ciudad when the country changes
+            });
+        } else {
+            setNewOferta({
+                ...newOferta,
+                [e.target.name]: e.target.value,
+            });
+        }
     };
 
     const handleAddNewOferta = () => {
         // Call the add new oferta action with the newOferta
         console.log("Adding new oferta:", newOferta);
         actions.addNewOferta(newOferta);
+
         // Clear the newOferta state
         setNewOferta({
             TipoProyecto: "",
             TipoEquipo: "",
             Pais: "",
+            Ciudad: "",
             FechaOferta: "",
             Precio: ""
         });
+
+        // Reset selectedCountry to an empty string
+        setSelectedCountry("");
     };
 
     const handleDeleteClick = (ofertaId) => {
@@ -86,6 +110,7 @@ const Ofertas = () => {
                         <th>Tipo Proyecto</th>
                         <th>Tipo Equipo</th>
                         <th>Pais</th>
+                        <th>Ciudad</th>
                         <th>Fecha Oferta</th>
                         <th>Precio</th>
                         <th>Action</th>
@@ -101,6 +126,7 @@ const Ofertas = () => {
                             <td>{oferta.TipoProyecto}</td>
                             <td>{oferta.TipoEquipo}</td>
                             <td>{oferta.Pais}</td>
+                            <td>{oferta.Ciudad}</td>
                             <td>{oferta.FechaOferta}</td>
                             <td>{oferta.Precio}</td>
                             <td>
@@ -141,12 +167,28 @@ const Ofertas = () => {
                             />
                         </td>
                         <td>
-                            <input
-                                type="text"
+                            <select
                                 name="Pais"
-                                value={newOferta.Pais}
+                                value={selectedCountry}
                                 onChange={handleNewOfertaInputChange}
-                            />
+                            >
+                                <option value="" disabled>Select Country</option>
+                                {store.countries && store.countries.map((country, index) => (
+                                    <option key={index} value={country}>{country}</option>
+                                ))}
+                            </select>
+                        </td>
+                        <td>
+                            <select
+                                name="Ciudad"
+                                value={newOferta.Ciudad}
+                                onChange={handleNewOfertaInputChange}
+                            >
+                                <option value="" disabled>Select City</option>
+                                {store.cities && store.cities.map((city, index) => (
+                                    <option key={index} value={city}>{city}</option>
+                                ))}
+                            </select>
                         </td>
                         <td>
                             <input

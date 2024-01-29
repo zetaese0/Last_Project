@@ -1,3 +1,4 @@
+import requests
 from flask_sqlalchemy import SQLAlchemy
 
 
@@ -66,10 +67,10 @@ class Ofertas(db.Model):
     TipoProyecto = db.Column(db.String(250), nullable=False)
     TipoEquipo = db.Column(db.String(250), nullable=False)
     Pais = db.Column(db.String(250), nullable=False)
-    FechaOferta = db.Column(db.DateTime, nullable=True)
-    Precio=db.Column(db.Integer, nullable=False)
+    Ciudad = db.Column(db.String(250), nullable=True)  # New column for city
 
-    
+    FechaOferta = db.Column(db.DateTime, nullable=True)
+    Precio = db.Column(db.Integer, nullable=False)
 
     def serialize(self):
         return {
@@ -77,7 +78,41 @@ class Ofertas(db.Model):
             "TipoProyecto": self.TipoProyecto,
             "TipoEquipo": self.TipoEquipo,
             "Pais": self.Pais,
+            "Ciudad": self.Ciudad,
             "FechaOferta": self.FechaOferta,
-            "Precio":self.Precio
+            "Precio": self.Precio
             # Add other fields as needed
         }
+    
+
+    @classmethod
+    def get_countries(cls):
+        # Make a request to the Nominatim API to get a list of countries
+        url = 'https://restcountries.com/v2/all'
+        response = requests.get(url)
+        data = response.json()
+
+        countries = []
+        for entry in data:
+            country_name = entry.get('name')
+            if country_name:
+                countries.append(country_name)
+
+        return countries
+
+
+    @classmethod
+    def get_cities_by_country(cls, country):
+        # Make a request to the Nominatim API to get cities for the specified country
+        url = f'https://nominatim.openstreetmap.org/search?country={country}&format=json'
+        response = requests.get(url)
+        data = response.json()
+
+        cities = []
+        for entry in data:
+            city_name = entry.get('display_name')
+            if city_name:
+                cities.append(city_name)
+
+        return cities
+    

@@ -128,6 +128,7 @@ def add_new_oferta():
         TipoProyecto=request_body['TipoProyecto'],
         TipoEquipo=request_body['TipoEquipo'],
         Pais=request_body['Pais'],
+        Ciudad=request_body['Ciudad'],
         FechaOferta=request_body['FechaOferta'],
         Precio=request_body['Precio']
     )
@@ -156,6 +157,7 @@ def update_oferta(oferta_id):
     oferta.TipoProyecto = updated_data.get('TipoProyecto', oferta.TipoProyecto)
     oferta.TipoEquipo = updated_data.get('TipoEquipo', oferta.TipoEquipo)
     oferta.Pais = updated_data.get('Pais', oferta.Pais)
+    oferta.Ciudad = updated_data.get('Ciudad', oferta.Ciudad)
     oferta.FechaOferta = updated_data.get('FechaOferta', oferta.FechaOferta)
     oferta.Precio = updated_data.get('Precio', oferta.Precio)
 

@@ -8,6 +8,7 @@ export const Home = () => {
     const { store, actions } = useContext(Context);
     const [selectedOferta, setSelectedOferta] = useState(null);
     const [editedOferta, setEditedOferta] = useState(null);
+    const [selectedCountry, setSelectedCountry] = useState("");
     const [newOferta, setNewOferta] = useState({
         TipoProyecto: "",
         TipoEquipo: "",
@@ -19,6 +20,7 @@ export const Home = () => {
     useEffect(() => {
         // Fetch ofertas when the component mounts
         actions.getOfertas();
+        actions.getCountry();
     }, []);
 
     const handleEditClick = (oferta) => {
@@ -47,11 +49,18 @@ export const Home = () => {
     };
 
     const handleNewOfertaInputChange = (e) => {
-        // Update the corresponding property in the newOferta state
-        setNewOferta({
-            ...newOferta,
-            [e.target.name]: e.target.value
-        });
+        if (e.target.name === "Pais") {
+            setSelectedCountry(e.target.value);
+            setNewOferta({
+                ...newOferta,
+                [e.target.name]: e.target.value,
+            });
+        } else {
+            setNewOferta({
+                ...newOferta,
+                [e.target.name]: e.target.value,
+            });
+        }
     };
 
     const handleAddNewOferta = () => {
@@ -139,12 +148,16 @@ export const Home = () => {
                             />
                         </td>
                         <td>
-                            <input
-                                type="text"
+                        <select
                                 name="Pais"
-                                value={newOferta.Pais}
+                                value={selectedCountry}
                                 onChange={handleNewOfertaInputChange}
-                            />
+                            >
+                                <option value="" disabled>Select Country</option>
+                                {store.countries.map((country, index) => (
+                                    <option key={index} value={country}>{country}</option>
+                                ))}
+                            </select>
                         </td>
                         <td>
                             <input

@@ -317,6 +317,43 @@ const getState = ({ getStore, getActions, setStore }) => {
         
 
 
+            // New action for fetching countries
+            getCountries: async () => {
+                try {
+                    const resp = await fetch('https://countriesnow.space/api/v0.1/countries');
+                    const data = await resp.json();
+            
+                    if (data.error === false) {
+                        // Extract country names from the response data
+                        const countryNames = data.data.map(country => country.country);
+            
+                        setStore({ countries: countryNames });
+                    } else {
+                        console.error('Error loading countries from backend:', data.msg);
+                    }
+                } catch (error) {
+                    console.error('Error loading countries from backend', error);
+                }
+            },
+
+            getCities: async (country) => {
+                try {
+                    const resp = await fetch('https://countriesnow.space/api/v0.1/countries/cities', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ country }),
+                    });
+                    const data = await resp.json();
+                    setStore({ cities: data.data });
+                } catch (error) {
+                    console.error('Error loading cities from backend', error);
+                }
+            },
+        
+
+
 
 
 

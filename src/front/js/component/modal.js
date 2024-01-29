@@ -2,7 +2,7 @@
 import React, { useEffect } from "react";
 import { Modal, Button, Form } from "react-bootstrap";
 
-const ModalComponent = ({ show, onHide, oferta, onEdit }) => {
+const ModalComponent = ({ show, onHide, oferta, onEdit, countries, cities }) => {
   const [editedOferta, setEditedOferta] = React.useState({});
 
   // Update the editedOferta state when the oferta prop changes
@@ -21,7 +21,6 @@ const ModalComponent = ({ show, onHide, oferta, onEdit }) => {
     onEdit(editedOferta);
     // Close the modal
     onHide();
-
   };
 
   return (
@@ -58,7 +57,31 @@ const ModalComponent = ({ show, onHide, oferta, onEdit }) => {
               name="Pais"
               value={editedOferta.Pais || ""}
               onChange={handleInputChange}
+              list="countryListModal" // Add a datalist for country suggestions
             />
+            <datalist id="countryListModal">
+              {countries &&
+                countries.map((country, index) => (
+                  <option key={index} value={country} />
+                ))}
+            </datalist>
+          </Form.Group>
+
+          <Form.Group controlId="formCiudad">
+            <Form.Label>Ciudad</Form.Label>
+            <Form.Control
+              type="text"
+              name="Ciudad"
+              value={editedOferta.Ciudad || ""}
+              onChange={handleInputChange}
+              list="cityListModal" // Add a datalist for city suggestions
+            />
+            <datalist id="cityListModal">
+              {cities &&
+                cities.map((city, index) => (
+                  <option key={index} value={city} />
+                ))}
+            </datalist>
           </Form.Group>
 
           <Form.Group controlId="formFechaOferta">

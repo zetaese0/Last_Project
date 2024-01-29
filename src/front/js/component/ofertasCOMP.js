@@ -11,6 +11,8 @@ const Ofertas = () => {
     const [editedOferta, setEditedOferta] = useState(null);
     const [selectedCountry, setSelectedCountry] = useState("");
     const [selectedCity, setSelectedCity] = useState("");
+    const [showDropdown, setShowDropdown] = useState(false);
+    const [showCityDropdown, setShowCityDropdown] = useState(false);
     const [newOferta, setNewOferta] = useState({
         TipoProyecto: "",
         TipoEquipo: "",
@@ -59,13 +61,21 @@ const Ofertas = () => {
         });
     };
 
+    // Filter countries based on input text
+
+
+
     const handleNewOfertaInputChange = (e) => {
         if (e.target.name === "Pais") {
-            setSelectedCountry(e.target.value);
+            if (e.target.value === "All") {
+                setSelectedCountry(""); // Reset the selected country
+            } else {
+                setSelectedCountry(e.target.value);
+            }
             setNewOferta({
                 ...newOferta,
+                Ciudad: "", // Clear the city when the country changes
                 [e.target.name]: e.target.value,
-                Ciudad: "", // Reset Ciudad when the country changes
             });
         } else {
             setNewOferta({
@@ -74,6 +84,8 @@ const Ofertas = () => {
             });
         }
     };
+    
+
 
     const handleAddNewOferta = () => {
         // Call the add new oferta action with the newOferta
@@ -92,6 +104,11 @@ const Ofertas = () => {
 
         // Reset selectedCountry to an empty string
         setSelectedCountry("");
+    };
+
+    const handleCityInputChange = (e) => {
+        setSelectedCity(e.target.value);
+        setShowCityDropdown(e.target.value.trim() !== '');
     };
 
     const handleDeleteClick = (ofertaId) => {
@@ -167,29 +184,58 @@ const Ofertas = () => {
                             />
                         </td>
                         <td>
-                            <select
-                                name="Pais"
-                                value={selectedCountry}
-                                onChange={handleNewOfertaInputChange}
-                            >
-                                <option value="" disabled>Select Country</option>
-                                {store.countries && store.countries.map((country, index) => (
-                                    <option key={index} value={country}>{country}</option>
-                                ))}
-                            </select>
+                            <div className="country-input">
+                                <input
+                                    type="text"
+                                    list="countryList"
+                                    placeholder="Search or Select Country"
+                                    value={selectedCountry}
+                                    onChange={(e) => {
+                                        setSelectedCountry(e.target.value);
+                                        setShowDropdown(e.target.value.trim() !== ''); // Show the dropdown when typing
+                                    }}
+                                    onClick={() => {
+                                        setShowDropdown(false); // Show dropdown only if there are multiple options
+                                    }}
+                                />
+                                <datalist id="countryList">
+                                    {store.countries &&
+                                        store.countries
+                                            .filter((country) =>
+                                                country.toLowerCase().startsWith(selectedCountry.toLowerCase())
+                                            )
+                                            .map((filteredCountry, index) => (
+                                                <option key={index} value={filteredCountry} />
+                                            ))}
+                                </datalist>
+                            </div>
                         </td>
+
+
                         <td>
-                            <select
-                                name="Ciudad"
-                                value={newOferta.Ciudad}
-                                onChange={handleNewOfertaInputChange}
-                            >
-                                <option value="" disabled>Select City</option>
-                                {store.cities && store.cities.map((city, index) => (
-                                    <option key={index} value={city}>{city}</option>
-                                ))}
-                            </select>
+                            <div className="city-input">
+                                <input
+                                    type="text"
+                                    list="cityList"
+                                    placeholder="Search or Select City"
+                                    value={selectedCity}
+                                    onChange={handleCityInputChange}
+                                    disabled={!selectedCountry} /* Disable the city input when no country is selected */
+                                />
+                                <datalist id="cityList">
+                                    {store.cities &&
+                                        store.cities
+                                            .filter((city) =>
+                                                city.toLowerCase().startsWith(selectedCity.toLowerCase())
+                                            )
+                                            .map((filteredCity, index) => (
+                                                <option key={index} value={filteredCity} />
+                                            ))}
+                                </datalist>
+                            </div>
                         </td>
+
+
                         <td>
                             <input
                                 type="text"

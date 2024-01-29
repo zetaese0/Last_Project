@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { Container, Card } from "react-bootstrap"; // Assuming you have Bootstrap installed
 
+
 const OfertaPage = () => {
   const { ofertaId } = useParams();
   const [oferta, setOferta] = useState(null);

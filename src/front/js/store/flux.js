@@ -3,10 +3,108 @@ const getState = ({ getStore, getActions, setStore }) => {
         store: {
             message: null,
             ofertas: [],
+            
             // ... other store properties
         },
         actions: {
             // ... other actions
+
+
+            checkForToken: () => {
+              const storedToken = localStorage.getItem("token");
+              if (storedToken) {
+                  setStore({ token: storedToken });
+                  getActions().getUserProfile();
+              }
+          },
+
+
+            getIsLogin: () => {
+                return getStore();
+              },
+        
+              resetLocalStorage: () => {
+                const store = getStore();
+                localStorage.removeItem("token");
+                setStore({ ...store, token: null, profile: null });
+              },
+              loginUser: async ({ email, password }) => {
+                try {
+                  // fetching data from the backend
+                  const resp = await fetch(process.env.BACKEND_URL + "/api/token", {
+                      method: "POST",
+                      headers: {
+                          "Content-Type": "application/json",
+                      },
+                      body: JSON.stringify({ email, password }),
+                  });
+              
+                  const data = await resp.json();
+              
+                  if (data.authorize) {
+                      // Login successful, handle hashed and plaintext passwords
+                      setStore({ token: data.token });
+                      localStorage.setItem("token", data.token);
+                      getActions().getUserProfile();
+                      return true;
+                  } else {
+                      // Handle login failure
+                      console.log("Invalid credentials");
+                      return false;
+                  }
+              } catch (error) {
+                  console.log("Error loading message from backend", error);
+                  console.error(error); // Log the full error object
+                  return false;
+              }
+            },
+              getUserProfile: async () => {
+                const store = getStore();
+                console.log(store.token);
+                try {
+                  const resp = await fetch(
+                    process.env.BACKEND_URL + "/api/profile/user",
+                    {
+                      method: "GET",
+                      headers: {
+                        "Content-Type": "application/json",
+                        Authorization: "Bearer " + store.token,
+                      },
+                    }
+                  );
+                  if (resp.status == 200) {
+                    const data = await resp.json();
+                    setStore({ profile: data });
+                    return true;
+                  }
+                  console.log("expired");
+                  return false;
+                } catch (error) {
+                  console.log("Error loading message from backend", error);
+                  return false;
+                }
+              },
+              createUser: async (user) => {
+                try {
+                  const resp = await fetch(process.env.BACKEND_URL + "/api/register", {
+                    method: "POST",
+                    headers: {
+                      "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify(user),
+                  });
+                  const data = await resp.json();
+                  return true;
+                } catch (error) {
+                  console.log("Error sending customer to back backend", error);
+                }
+              },
+
+              logOut: () => {
+                localStorage.removeItem("token");
+                setStore({ token: null, profile: null });
+              },
+
 
             getOfertas: async () => {
                 const store = getStore();
@@ -105,6 +203,125 @@ const getState = ({ getStore, getActions, setStore }) => {
                 }
             },
             
+            
+            // PARTE ADMIN
+
+            checkForTokenAdmin: () => {
+              const storedTokenAdmin = localStorage.getItem("tokenAdmin");
+              if (storedTokenAdmin) {
+                  setStore({ tokenAdmin: storedTokenAdmin });
+                  getActions().getAdminProfile();
+              }
+          },
+      
+          loginAdmin: async ({ email, password }) => {
+            try {
+                // fetching data from the backend
+                const resp = await fetch(process.env.BACKEND_URL + "/api/admin/token", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({ email, password }),
+                });
+            
+                const data = await resp.json();
+            
+                if (data.authorize) {
+                    // Login successful, handle hashed and plaintext passwords
+                    setStore({ tokenAdmin: data.tokenAdmin });
+                    localStorage.setItem("tokenAdmin", data.tokenAdmin); // Ensure that the tokenAdmin is stored in localStorage
+                    getActions().getAdminProfile();
+                    return true;
+                } else {
+                    // Handle login failure
+                    console.log("Invalid credentials");
+                    return false;
+                }
+            } catch (error) {
+                console.log("Error loading message from backend", error);
+                console.error(error); // Log the full error object
+                return false;
+            }
+        },
+      
+          getAdminProfile: async () => {
+              const store = getStore();
+              try {
+                  const resp = await fetch(
+                      process.env.BACKEND_URL + "/api/admin/profile/user",
+                      {
+                          method: "GET",
+                          headers: {
+                              "Content-Type": "application/json",
+                              Authorization: "Bearer " + store.tokenAdmin,
+                          },
+                      }
+                  );
+                  if (resp.status === 200) {
+                      const data = await resp.json();
+                      setStore({ profile: data });
+                      return true;
+                  }
+                  console.log("expired");
+                  return false;
+              } catch (error) {
+                  console.log("Error loading message from backend", error);
+                  return false;
+              }
+          },
+      
+          createAdmin: async (user) => {
+              try {
+                  const resp = await fetch(process.env.BACKEND_URL + "/api/admin/register", {
+                      method: "POST",
+                      headers: {
+                          "Content-Type": "application/json",
+                      },
+                      body: JSON.stringify(user),
+                  });
+                  const data = await resp.json();
+                  return true;
+              } catch (error) {
+                  console.log("Error sending customer to back backend", error);
+              }
+          },
+
+        // New function to delete an admin
+        deleteAdmin: async (adminId) => {
+            try {
+            const resp = await fetch(`${process.env.BACKEND_URL}/api/admin/${adminId}`, {
+                method: "DELETE",
+                headers: {
+                "Content-Type": "application/json",
+                Authorization: "Bearer " + getStore().tokenAdmin,
+                },
+            });
+
+            if (resp.ok) {
+                // Admin deletion successful
+                console.log("Admin deleted successfully");
+                // Optionally, you can call another action to refresh the list of admins or update the state as needed.
+                // Example: actions.getAdmins();
+                return true;
+            } else {
+                // Handle admin deletion failure
+                console.log("Failed to delete admin");
+                return false;
+            }
+            } catch (error) {
+            console.error("Error deleting admin:", error);
+            return false;
+            }
+        },
+        
+
+
+
+
+
+
+
         }
     };
 };

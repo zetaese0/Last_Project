@@ -1,14 +1,25 @@
 // modal.js
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Modal, Button, Form } from "react-bootstrap";
 
-const ModalComponent = ({ show, onHide, oferta, onEdit, countries, cities }) => {
-  const [editedOferta, setEditedOferta] = React.useState({});
+const ModalComponent = ({ show, onHide, oferta, onEdit, fetchCountries, fetchCities, countries, cities }) => {
+  const [editedOferta, setEditedOferta] = useState({});
 
-  // Update the editedOferta state when the oferta prop changes
   useEffect(() => {
     setEditedOferta(oferta || {});
   }, [oferta]);
+
+  useEffect(() => {
+    // Fetch countries when the component mounts
+    fetchCountries();
+  }, [fetchCountries]);
+
+  useEffect(() => {
+    // Fetch cities based on the selected country
+    if (editedOferta.Pais) {
+      fetchCities(editedOferta.Pais);
+    }
+  }, [editedOferta.Pais, fetchCities]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -16,11 +27,25 @@ const ModalComponent = ({ show, onHide, oferta, onEdit, countries, cities }) => 
   };
 
   const handleUpdateClick = () => {
-    // Call the onEdit callback with the edited oferta
-    console.log("Pulsando desde el modal y su valor", editedOferta);
     onEdit(editedOferta);
-    // Close the modal
     onHide();
+  };
+
+  const handleCountryInputChange = (e) => {
+    const countryInput = e.target.value;
+    setEditedOferta({
+      ...editedOferta,
+      Pais: countryInput,
+      Ciudad: "", // Clear the city when the country changes
+    });
+    fetchCities(countryInput);
+  };
+
+  const handleCityInputChange = (e) => {
+    setEditedOferta({
+      ...editedOferta,
+      Ciudad: e.target.value,
+    });
   };
 
   return (
@@ -30,7 +55,7 @@ const ModalComponent = ({ show, onHide, oferta, onEdit, countries, cities }) => 
       </Modal.Header>
       <Modal.Body>
         <Form>
-          <Form.Group controlId="formTipoProyecto">
+        <Form.Group controlId="formTipoProyecto">
             <Form.Label>Tipo Proyecto</Form.Label>
             <Form.Control
               type="text"
@@ -49,41 +74,47 @@ const ModalComponent = ({ show, onHide, oferta, onEdit, countries, cities }) => 
               onChange={handleInputChange}
             />
           </Form.Group>
-
           <Form.Group controlId="formPais">
             <Form.Label>Pais</Form.Label>
-            <Form.Control
-              type="text"
-              name="Pais"
-              value={editedOferta.Pais || ""}
-              onChange={handleInputChange}
-              list="countryListModal" // Add a datalist for country suggestions
-            />
-            <datalist id="countryListModal">
-              {countries &&
-                countries.map((country, index) => (
-                  <option key={index} value={country} />
-                ))}
-            </datalist>
+            <div className="country-input">
+              <input
+                type="text"
+                list="countryListModal"
+                placeholder="Search or Select Country"
+                value={editedOferta.Pais || ""}
+                onChange={handleCountryInputChange}
+              />
+              <datalist id="countryListModal">
+                {countries &&
+                  countries
+                    .filter((country) => country && country.toLowerCase().startsWith((editedOferta.Pais || "").toLowerCase()))
+                    .map((filteredCountry, index) => (
+                      <option key={index} value={filteredCountry} />
+                    ))}
+              </datalist>
+            </div>
           </Form.Group>
 
           <Form.Group controlId="formCiudad">
             <Form.Label>Ciudad</Form.Label>
-            <Form.Control
-              type="text"
-              name="Ciudad"
-              value={editedOferta.Ciudad || ""}
-              onChange={handleInputChange}
-              list="cityListModal" // Add a datalist for city suggestions
-            />
-            <datalist id="cityListModal">
-              {cities &&
-                cities.map((city, index) => (
-                  <option key={index} value={city} />
-                ))}
-            </datalist>
+            <div className="city-input">
+              <input
+                type="text"
+                list="cityListModal"
+                placeholder="Search or Select City"
+                value={editedOferta.Ciudad || ""}
+                onChange={handleCityInputChange}
+              />
+              <datalist id="cityListModal">
+                {cities &&
+                  cities
+                    .filter((city) => city && city.toLowerCase().startsWith((editedOferta.Ciudad || "").toLowerCase()))
+                    .map((filteredCity, index) => (
+                      <option key={index} value={filteredCity} />
+                    ))}
+              </datalist>
+            </div>
           </Form.Group>
-
           <Form.Group controlId="formFechaOferta">
             <Form.Label>Fecha Oferta</Form.Label>
             <Form.Control

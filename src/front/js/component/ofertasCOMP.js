@@ -4,6 +4,9 @@ import { Context } from "../store/appContext";
 import EditModal from "../component/modal";
 import { Link } from "react-router-dom";
 import "../../styles/ofertas.css";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+
 
 const Ofertas = () => {
     const { store, actions } = useContext(Context);
@@ -18,7 +21,7 @@ const Ofertas = () => {
         TipoEquipo: "",
         Pais: "",
         Ciudad: "",
-        FechaOferta: "",
+        FechaOferta: new Date(),
         Precio: ""
     });
 
@@ -29,11 +32,11 @@ const Ofertas = () => {
     }, []);
 
     useEffect(() => {
-        // Fetch cities based on the selected country
-        if (selectedCountry) {
-            actions.getCities(selectedCountry);
+        // Fetch cities based on the selected country in newOferta
+        if (newOferta.Pais) {
+            actions.getCities(newOferta.Pais);
         }
-    }, [selectedCountry]);
+    }, [newOferta.Pais]);
 
     const handleEditClick = (oferta) => {
         console.log("Editing oferta PULSANDO EN FRONT ANTES MODAL:", oferta);
@@ -63,19 +66,24 @@ const Ofertas = () => {
 
     // Filter countries based on input text
 
+    useEffect(() => {
+        console.log("After Update - newOferta:", newOferta);
+    }, [newOferta]);
 
 
     const handleNewOfertaInputChange = (e) => {
         if (e.target.name === "Pais") {
-            if (e.target.value === "All") {
-                setSelectedCountry(""); // Reset the selected country
-            } else {
-                setSelectedCountry(e.target.value);
-            }
+            const selectedCountryValue = e.target.value;
+            const newCityValue = selectedCountryValue === "All" ? "" : newOferta.Ciudad;
             setNewOferta({
                 ...newOferta,
-                Ciudad: "", // Clear the city when the country changes
-                [e.target.name]: e.target.value,
+                Pais: selectedCountryValue,
+                Ciudad: newCityValue,
+            });
+        } else if (e.target.name === "Ciudad") {
+            setNewOferta({
+                ...newOferta,
+                Ciudad: e.target.value,
             });
         } else {
             setNewOferta({
@@ -85,7 +93,7 @@ const Ofertas = () => {
         }
     };
     
-
+ 
 
     const handleAddNewOferta = () => {
         // Call the add new oferta action with the newOferta
@@ -189,9 +197,13 @@ const Ofertas = () => {
                                     type="text"
                                     list="countryList"
                                     placeholder="Search or Select Country"
-                                    value={selectedCountry}
+                                    value={newOferta.Pais}  /* Change here */
                                     onChange={(e) => {
-                                        setSelectedCountry(e.target.value);
+                                        setNewOferta({
+                                            ...newOferta,
+                                            Pais: e.target.value,
+                                            Ciudad: "",  // Clear the city when the country changes
+                                        });
                                         setShowDropdown(e.target.value.trim() !== ''); // Show the dropdown when typing
                                     }}
                                     onClick={() => {
@@ -202,7 +214,7 @@ const Ofertas = () => {
                                     {store.countries &&
                                         store.countries
                                             .filter((country) =>
-                                                country.toLowerCase().startsWith(selectedCountry.toLowerCase())
+                                                country.toLowerCase().startsWith(newOferta.Pais.toLowerCase())  /* Change here */
                                             )
                                             .map((filteredCountry, index) => (
                                                 <option key={index} value={filteredCountry} />
@@ -211,39 +223,49 @@ const Ofertas = () => {
                             </div>
                         </td>
 
-
                         <td>
                             <div className="city-input">
-                                <input
-                                    type="text"
-                                    list="cityList"
-                                    placeholder="Search or Select City"
-                                    value={selectedCity}
-                                    onChange={handleCityInputChange}
-                                    disabled={!selectedCountry} /* Disable the city input when no country is selected */
-                                />
-                                <datalist id="cityList">
-                                    {store.cities &&
-                                        store.cities
-                                            .filter((city) =>
-                                                city.toLowerCase().startsWith(selectedCity.toLowerCase())
-                                            )
-                                            .map((filteredCity, index) => (
-                                                <option key={index} value={filteredCity} />
-                                            ))}
-                                </datalist>
+                            <input
+                                type="text"
+                                list="cityList"
+                                placeholder="Search or Select City"
+                                value={newOferta.Ciudad}
+                                onChange={(e) => {
+                                    setNewOferta({
+                                        ...newOferta,
+                                        Ciudad: e.target.value,
+                                    });
+                                    setShowCityDropdown(e.target.value.trim() !== ''); // Show the city dropdown when typing
+                                }}
+                                disabled={!newOferta.Pais}
+                            />
+                                    <datalist id="cityList">
+                                        {store.cities &&
+                                            store.cities
+                                                .filter((city) =>
+                                                    city.toLowerCase().startsWith(newOferta.Ciudad.toLowerCase())
+                                                )
+                                                .map((filteredCity, index) => (
+                                                    <option key={index} value={filteredCity} />
+                                                ))}
+                                    </datalist>
+
                             </div>
                         </td>
 
 
-                        <td>
-                            <input
-                                type="text"
-                                name="FechaOferta"
-                                value={newOferta.FechaOferta}
-                                onChange={handleNewOfertaInputChange}
-                            />
-                        </td>
+                                <td>
+                                    <DatePicker
+                                        selected={newOferta.FechaOferta}
+                                        onChange={(date) => setNewOferta({ ...newOferta, FechaOferta: date })}
+                                        showTimeInput
+                                        dateFormat="yyyy-MM-dd HH:mm"
+                                    />
+                                </td>
+
+
+
+
                         <td>
                             <input
                                 type="text"
@@ -270,6 +292,10 @@ const Ofertas = () => {
                 onHide={() => setSelectedOferta(null)}
                 oferta={selectedOferta}
                 onEdit={handleUpdateClick}
+                fetchCountries={actions.getCountries} // Pass the fetchCountries action
+                fetchCities={actions.getCities} // Pass the fetchCities action
+                countries={store.countries} // Pass the countries from the store
+                cities={store.cities} // Pass the cities from the store
             />
         </div>
     );
